@@ -88,7 +88,7 @@ async function sendVerificationOtp(to, otp, name) {
     console.log(`║  OTP:  ${otp.padEnd(36)}║`);
     console.log('╚══════════════════════════════════════════════╝');
     console.log('');
-    return { sent: false, otp };
+    return { sent: true, mode: 'dev' };
   }
 
   try {

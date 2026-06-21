@@ -27,6 +27,12 @@ class UserService {
     const verificationOtp = this.generateOtp();
     const verificationOtpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
+    // Send OTP email BEFORE creating the user — if it fails, no orphaned user
+    const sendResult = await sendVerificationOtp(email, verificationOtp, name);
+    if (!sendResult.sent) {
+      throw new CustomError('Failed to send verification email. Please try again later.', 500);
+    }
+
     const user = await User.create({
       name,
       email,
@@ -35,8 +41,6 @@ class UserService {
       verificationOtpExpires,
       isVerified: false
     });
-
-    await sendVerificationOtp(email, verificationOtp, name);
 
     return { user };
   }
@@ -154,7 +158,10 @@ class UserService {
     user.verificationOtpExpires = verificationOtpExpires;
     await user.save();
 
-    await sendVerificationOtp(email, verificationOtp, user.name);
+    const sendResult = await sendVerificationOtp(email, verificationOtp, user.name);
+    if (!sendResult.sent) {
+      throw new CustomError('Failed to resend verification email. Please try again later.', 500);
+    }
 
     return { user };
   }
