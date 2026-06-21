@@ -6,6 +6,7 @@ const rateLimit = require('express-rate-limit');
 
 // Import routes
 const authRoutes = require('./routes/authRoutes');
+console.log('AUTH ROUTE OBJECT:', typeof authRoutes);
 const skillRoutes = require('./routes/skillRoutes');
 const revisionRoutes = require('./routes/revisionRoutes');
 const interviewRoutes = require('./routes/interviewRoutes');
@@ -61,6 +62,7 @@ app.get('/', (req, res) => {
   res.json({ message: 'Helix Preparation Intelligence API - Online' });
 });
 
+console.log('MOUNTING AUTH ROUTES');
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/skills', skillRoutes);
