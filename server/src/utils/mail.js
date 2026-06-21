@@ -67,7 +67,10 @@ function createTransporter() {
       auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS
-      }
+      },
+      connectionTimeout: 10000, // 10s to establish connection
+      socketTimeout: 15000,     // 15s for socket inactivity
+      greetingTimeout: 10000    // 10s for SMTP greeting
     });
   }
   return null;
@@ -88,23 +91,27 @@ async function sendVerificationOtp(to, otp, name) {
     return { sent: false, otp };
   }
 
-  await transporter.sendMail({
-    from: `"Helix" <${process.env.SMTP_FROM || 'noreply@helixprep.com'}>`,
-    to,
-    subject: 'Your Helix verification code',
-    html: `
-      <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
-        <h1 style="font-size: 24px; font-weight: 900; text-transform: uppercase; letter-spacing: -0.5px;">Helix</h1>
-        <p>Hi ${name},</p>
-        <p>Enter this code to verify your email address and activate your account:</p>
-        <div style="font-size: 36px; font-weight: 900; letter-spacing: 8px; text-align: center; padding: 24px; background: #f5f5f5; margin: 16px 0; font-family: monospace;">${otp}</div>
-        <p style="color: #666; font-size: 13px;">This code expires in 10 minutes.</p>
-        <p style="color: #666; font-size: 13px;">If you didn't create an account, you can ignore this email.</p>
-      </div>
-    `
-  });
-
-  return { sent: true };
+  try {
+    await transporter.sendMail({
+      from: `"Helix" <${process.env.SMTP_FROM || 'noreply@helixprep.com'}>`,
+      to,
+      subject: 'Your Helix verification code',
+      html: `
+        <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
+          <h1 style="font-size: 24px; font-weight: 900; text-transform: uppercase; letter-spacing: -0.5px;">Helix</h1>
+          <p>Hi ${name},</p>
+          <p>Enter this code to verify your email address and activate your account:</p>
+          <div style="font-size: 36px; font-weight: 900; letter-spacing: 8px; text-align: center; padding: 24px; background: #f5f5f5; margin: 16px 0; font-family: monospace;">${otp}</div>
+          <p style="color: #666; font-size: 13px;">This code expires in 10 minutes.</p>
+          <p style="color: #666; font-size: 13px;">If you didn't create an account, you can ignore this email.</p>
+        </div>
+      `
+    });
+    return { sent: true };
+  } catch (err) {
+    console.error(`[SMTP] Failed to send OTP to ${to}:`, err.message);
+    return { sent: false, error: err.message };
+  }
 }
 
 module.exports = {
