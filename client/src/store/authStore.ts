@@ -57,7 +57,14 @@ export const useAuthStore = create<AuthState>((set) => ({
   logout: async () => {
     set({ isLoading: true });
     try {
-      await api.post('/auth/logout');
+      // Only call server logout if we have a token (avoids 401 on stale sessions)
+      const authData = localStorage.getItem('auth_session');
+      if (authData) {
+        const parsed = JSON.parse(authData);
+        if (parsed?.token) {
+          await api.post('/auth/logout');
+        }
+      }
     } catch (err) {
       console.warn('Logout request failed, clearing local session anyway.', err);
     } finally {
