@@ -22,6 +22,8 @@ const aiRoutes = require('./ai/routes/ai.routes');
 
 const app = express();
 
+app.set('trust proxy', 1);
+
 // CORS - must be early to handle preflight before other middleware
 const allowedOrigins = [
   process.env.CLIENT_URL,
