@@ -33,10 +33,15 @@ const allowedOrigins = [
 ].filter(Boolean);
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin || process.env.NODE_ENV === 'production') return callback(null, true);
-    if (allowedOrigins.includes(origin)) return callback(null, true);
-    if (process.env.VERCEL_URL && origin.endsWith('.vercel.app')) return callback(null, true);
-    callback(null, true);
+    // Allow requests with no origin (mobile apps, curl, server-to-server)
+    if (!origin) return callback(null, true);
+    // Allow explicitly listed origins
+    if (allowedOrigins.includes(origin)) return callback(null, origin);
+    // Allow any Vercel preview deployment
+    if (origin.endsWith('.vercel.app')) return callback(null, origin);
+    // Reject unknown origins in production, allow in dev
+    if (process.env.NODE_ENV !== 'production') return callback(null, origin);
+    callback(new Error('Not allowed by CORS'));
   },
   credentials: true
 }));
